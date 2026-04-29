@@ -6,17 +6,16 @@ const ADMIN_ID = Number(process.env.ADMIN_ID);
 
 // Bienvenida
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "👋 Escríbeme y el admin te responderá.");
+  bot.sendMessage(msg.chat.id, "👋 Escribe y el admin de TechnNL MODS te responderá.");
 });
 
-// Reenviar mensajes al admin (con nombre clickeable)
+// Recibir mensajes de usuarios
 bot.on('message', (msg) => {
   const userId = msg.chat.id;
 
-  // evitar loop (mensajes tuyos)
+  // evitar loop
   if (userId === ADMIN_ID) return;
 
-  // solo texto por ahora
   if (!msg.text) return;
 
   const name = `${msg.from.first_name || ''} ${msg.from.last_name || ''}`.trim();
@@ -24,17 +23,22 @@ bot.on('message', (msg) => {
 
   bot.sendMessage(
     ADMIN_ID,
-    `📩 Mensaje de <a href="tg://user?id=${userId}">${name}</a> ${username}:\n\n${msg.text}`,
-    { parse_mode: "HTML" }
+    `📩 Mensaje de ${name} ${username}\nID:${userId}\n\n${msg.text}`
   );
 });
 
-// Responder con comando
-bot.onText(/\/reply (.+) (.+)/, (msg, match) => {
+// RESPONDER DIRECTO (reply real)
+bot.on('message', (msg) => {
   if (msg.chat.id !== ADMIN_ID) return;
 
-  const userId = match[1];
-  const text = match[2];
+  if (msg.reply_to_message) {
+    const original = msg.reply_to_message.text;
 
-  bot.sendMessage(userId, `💬 ${text}`);
+    const match = original.match(/ID:(\d+)/);
+    if (!match) return;
+
+    const userId = match[1];
+
+    bot.sendMessage(userId, `💬 ${msg.text}`);
+  }
 });
