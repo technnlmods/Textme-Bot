@@ -9,19 +9,23 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, "👋 Escríbeme y el admin te responderá.");
 });
 
-// Reenviar mensajes al admin
+// Reenviar mensajes al admin (con nombre clickeable)
 bot.on('message', (msg) => {
   const userId = msg.chat.id;
 
-  // evitar loop
+  // evitar loop (mensajes tuyos)
   if (userId === ADMIN_ID) return;
 
-  // solo texto (luego ampliamos)
+  // solo texto por ahora
   if (!msg.text) return;
+
+  const name = `${msg.from.first_name || ''} ${msg.from.last_name || ''}`.trim();
+  const username = msg.from.username ? `(@${msg.from.username})` : '';
 
   bot.sendMessage(
     ADMIN_ID,
-    `📩 Mensaje de ${userId}:\n\n${msg.text}`
+    `📩 Mensaje de <a href="tg://user?id=${userId}">${name}</a> ${username}:\n\n${msg.text}`,
+    { parse_mode: "HTML" }
   );
 });
 
