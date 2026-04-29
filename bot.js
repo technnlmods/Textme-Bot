@@ -1,7 +1,29 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+// 🔒 Evitar doble instancia en el mismo proceso
+if (global.botStarted) {
+  console.log("⚠️ Bot ya iniciado, evitando duplicado");
+  process.exit(0);
+}
+global.botStarted = true;
+
+// 🤖 Crear bot con polling más estable
+const bot = new TelegramBot(process.env.BOT_TOKEN, {
+  polling: {
+    interval: 300,
+    autoStart: true,
+    params: {
+      timeout: 10
+    }
+  }
+});
+
+// 🔥 Eliminar webhook (clave para evitar 409)
+bot.deleteWebHook()
+  .then(() => console.log("✅ Webhook eliminado"))
+  .catch(() => console.log("ℹ️ No había webhook activo"));
+
 const ADMIN_ID = Number(process.env.ADMIN_ID);
 
 // Bienvenida
@@ -27,7 +49,7 @@ bot.on('message', (msg) => {
   );
 });
 
-// RESPONDER DIRECTO (reply real)
+// RESPONDER DIRECTO (reply)
 bot.on('message', (msg) => {
   if (msg.chat.id !== ADMIN_ID) return;
 
